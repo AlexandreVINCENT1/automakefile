@@ -1,0 +1,115 @@
+#!/bin/bash
+
+if [ ! $# -eq 1 ];
+then
+    exit 84
+fi
+
+
+if [ ! -f $1 ]
+then
+    exit 84
+fi
+
+if [ ! -s $1 ]
+then
+    exit 84
+fi
+dir=`grep "PROJECT_DIR" $1 | cut -c13-`
+makefile="./$dir/Makefile"
+
+if [ ! -f "./$dir/Makefile" ];
+then
+    touch ./$dir/Makefile
+else
+    touch ./$dir/Makefile1
+    makefile="./$dir/Makefile1"
+fi
+
+echo "##" >> $makefile
+echo "## EPITECH PROJECT, 2019" >> $makefile
+echo "## MAKEFILE" >> $makefile
+echo "## File description:" >> $makefile
+echo "## Makefile for synthesis pool" >> $makefile
+echo "##" >> $makefile
+
+get_element()
+{
+    str=$1
+    parse=$2
+    s=$str$parse
+    echo -e "$3 =\c" >> $makefile
+    while [[ $s ]]; do
+        echo -e "${s%%"$parse"*}" >> $makefile;
+        s=${s#*"$parse"};
+    done;
+}
+
+test_header()
+{
+    tab=$1
+    dir_h=$2
+    dir_d=$3
+    for i in $tab; do
+        if [ ! -f $dir_d/$dir_h/$i ];
+        then
+            rm $makefile
+            exit 84
+        fi
+    done;
+}
+
+get_src()
+{
+    str=$1
+    echo -e "$2 =\c" >> $makefile
+    for i in $str; do
+        if [ ! -f $dir/$i ];
+        then
+            rm $makefile
+            exit 84
+        fi
+        echo -e "\t$src_dir/$i\t\\" >> $makefile;
+    done;
+    echo "" >> $makefile
+}
+
+src_dir=`grep "SOURCES_DIR" $1 | cut -c13-`
+get_src "`cat $dir/config | sed 's/;/ /g' | sed 's/ /\n/g' | grep ".\.c"`" "SRC" "`grep "PROJECT_DIR" $1 | cut -c13-`"
+echo -e "NAME =\c" >> $makefile
+if [ "`grep "EXEC" $1 | cut -c6-`" = "" ];
+then
+    echo "a.out" >> $makefile
+else
+    echo -e "`grep "EXEC" $1 | cut -c6-`" >> $makefile
+fi
+if [ ! "`grep "HEADERS_DIR" $1`" = "" ];
+then
+    test_header "` cat $dir/config | sed 's/;/ /g' | sed 's/ /\n/g' | grep ".\.h"`" "`cat $dir/config | grep "HEADER" | cut -c13-`" "$dir"
+fi
+echo "" >> $makefile
+echo 'OBJ = $(SRC:.c=.o)' >> $makefile
+echo "" >> $makefile
+echo 'CFLAGS = -g3 -Iinclude -Wall -Wextra' >> $makefile
+echo "" >> $makefile
+echo 'all : $(NAME)' >> $makefile
+echo "" >> $makefile
+echo '$(NAME):	$(OBJ)' >> $makefile
+echo '	gcc $(CFLAGS) -o $(NAME) $(OBJ)' >> $makefile
+echo "" >> $makefile
+echo 'clean :' >> $makefile
+echo '	rm -f $(OBJ)' >> $makefile
+echo "" >> $makefile
+echo 'fclean : clean' >> $makefile
+echo '	rm -f $(NAME)' >> $makefile
+echo "" >> $makefile
+echo 're:			fclean all' >> $makefile
+echo "" >> $makefile
+echo '.PHONY:		all clean fclean re' >> $makefile
+
+
+if [ -f "./$dir/Makefile1" ];
+then
+    rm ./$dir/Makefile
+    mv $makefile ./$dir/Makefile
+fi
